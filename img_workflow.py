@@ -20,16 +20,24 @@ comparison_llm = llm.with_structured_output(ItemSuggestions)
 
 def extract_items(state: State):
     """Primer paso; extraer datos de insumos comprados."""
-    factura = handle_file_for_llm("./facturas/factura2.pdf")
+    image_content_block = handle_file_for_llm("./facturas/factura2.pdf")
+    
+    # Crear mensaje con contenido multimodal correcto
     msg_for_llm = [
         SystemMessage(
             content=(
                 "Hablas en español. Eres un asistente que lee facturas de compra en formato de Chile. "
                 "Extrae los productos a los que hace referencia esta factura de compra, especificamente el nombre, "
-                "la cantidad del producto, su unidad de medida y su precio. El archivo está adjunto."
+                "la cantidad del producto, su unidad de medida y su precio. Si no puedes distinguir claramente todas "
+                "las caracteristicas de un producto, retorna 'failure' en el campo 'message' del output."
             )
         ),
-        HumanMessage(content=factura if isinstance(factura, str) else "Archivo PDF adjunto.")
+        HumanMessage(
+            content=[
+                {"type": "text", "text": "Por favor, extrae los productos de esta factura:"},
+                image_content_block,  # Content block con la imagen/PDF codificado
+            ]
+        ),
     ]
     msg = extraction_llm.invoke(msg_for_llm)
     print(msg.bitems)
@@ -38,6 +46,8 @@ def extract_items(state: State):
 
 def compare_items(state: State):
     """Segundo paso; ver si hay items en la BD que tengan mismo significado semántico"""
+    if state.billItems.message == "failure":
+        return {"itemPairs": ItemSuggestions(found=False, suggestions={})}
     db_items: BillItems = get_db_items()
 
     msg_for_llm = [
@@ -48,8 +58,8 @@ def compare_items(state: State):
         ),
         HumanMessage(
             content=(
-                f"Compara los siguientes items extraidos de una factura de compra: {state['billItems']} "
-                f"con los siguientes items en la base de datos: {db_items}. Devuelve una lista "
+                f"Compara los siguientes items extraidos de una factura de compra: *{state['billItems']}* "
+                f"con los siguientes items en la base de datos: *{db_items}*. Devuelve una lista "
                 "con los nombres de los items en la base de datos que tengan el mismo significado "
                 "semántico que los items extraidos de la factura. Si no encuentras items similares, devuelve una lista vacia y un False"
             )
