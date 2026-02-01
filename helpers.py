@@ -23,7 +23,8 @@ def get_db_items():
   """Función dummy que simula obtener items desde una base de datos."""
   lista = [{"Name": "Arroz", "UPrice": 1500, "Quantity": 2},
             {"Name": "Fideos", "UPrice": 1200, "Quantity": 1},
-            {"Name": "Carne", "UPrice": 8000, "Quantity": 1}]
+            {"Name": "Carne", "UPrice": 8000, "Quantity": 1},
+            {"Name": "Agua 20L", "UPrice": 2500, "Quantity": 2}]
   return {"dbItems": lista}
 
 def handle_file_for_llm(file_path):
