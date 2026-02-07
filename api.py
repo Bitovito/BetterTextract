@@ -2,13 +2,15 @@ import asyncio
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from img_workflow import chain
+from output_types import State, BillItems, ItemSuggestions, ContentBlock
 
 app = FastAPI(title="BetterTextract API", version="1.0.0")
 
 
 class FacturaRequest(BaseModel):
     """Modelo para la solicitud del endpoint"""
-    filename: str
+    content_block: ContentBlock
+    db_items: list
 
 
 class FacturaResponse(BaseModel):
@@ -24,21 +26,29 @@ async def extract_factura(request: FacturaRequest):
     Endpoint para extraer datos de una factura.
     
     Args:
-        request: Contiene el nombre del archivo (ej: "factura2.pdf")
+        request: Contiene el content block de la factura
     
     Returns:
         FacturaResponse con el estado del workflow
     """
     try:
-        # Validar que el filename no esté vacío
-        if not request.filename or not request.filename.strip():
-            raise ValueError("El nombre del archivo no puede estar vacío")
+        # Validar que el content_block no esté vacío
+        if not request.content_block or not request.content_block.base64.strip():
+            raise ValueError("El content block no puede estar vacío")
         
         # Ejecutar el workflow en un thread pool para no bloquear
         loop = asyncio.get_event_loop()
         state = await loop.run_in_executor(
             None,
-            lambda: chain.invoke({"filename": request.filename})
+            lambda: chain.invoke({
+                "factura": request.content_block,
+                "billItems": {
+                    "message": "failure", 
+                    "bitems": []
+                },
+                "dbItems": request.db_items,
+                "itemPairs": ItemSuggestions(found=False, suggestions={})
+                })
         )
         
         return FacturaResponse(
@@ -50,7 +60,7 @@ async def extract_factura(request: FacturaRequest):
     except FileNotFoundError as e:
         raise HTTPException(
             status_code=404,
-            detail=f"Archivo no encontrado: {request.filename}"
+            detail=f"Archivo no encontrado: {request.content_block.base64[:30]}..."  # Mostrar solo los primeros caracteres para no saturar el mensaje
         )
     
     except ValueError as e:

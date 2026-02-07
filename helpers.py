@@ -1,10 +1,8 @@
-import base64
 import os
+import base64
 from io import BytesIO
-from pdf2image import convert_from_path
-import requests
-import zipfile
-from pathlib import Path
+from google.cloud import storage
+from pdf2image import convert_from_bytes, convert_from_path
 
 def encode_image(file_path):
     ext = os.path.splitext(file_path)[-1].lower()
@@ -74,3 +72,28 @@ def handle_file_for_llm(file_path):
     
     else:
         raise ValueError(f"Tipo de archivo no soportado: {ext}")
+    
+def descargar_pdf_gcs(bucket_name, blob_name):
+    """Descarga un PDF desde GCS y lo convierte a base64"""
+    client = storage.Client()
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob(blob_name)
+    
+    # Descargar a memoria
+    pdf_bytes = blob.download_as_bytes()
+    
+    # Convertir a imágenes (como en tu código actual)
+    images = convert_from_bytes(pdf_bytes)
+    
+    # Convertir primera imagen a base64
+    if images:
+        from io import BytesIO
+        buffer = BytesIO()
+        images[0].save(buffer, format="PNG")
+        base64_image = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        
+        return {
+            "type": "image",
+            "base64": base64_image,
+            "mime_type": "image/png"
+        }

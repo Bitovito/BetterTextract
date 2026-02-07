@@ -21,6 +21,12 @@ class ItemSuggestions(BaseModel):
     suggestions: Optional[Dict[str, BItem]] = Field(default={}, description="Dictionary mapping item names from the bill to suggested items from the database.")
 
 class State(TypedDict):
+    factura: ContentBlock
     billItems: BillItems
-    dbItems: list[str]
+    dbItems: list
     itemPairs: ItemSuggestions
+
+class ContentBlock(TypedDict):
+    type: str
+    base64: str
+    myme_tipe: str
