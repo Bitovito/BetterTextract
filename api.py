@@ -11,7 +11,7 @@ app = FastAPI(title="BetterTextract API", version="1.0.0")
 class FacturaRequest(BaseModel):
     """Modelo para la solicitud del endpoint"""
     content_block: ContentBlock
-    db_items: list[dict]
+    db_items: dict
 
 
 class FacturaResponse(BaseModel):
