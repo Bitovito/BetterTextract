@@ -3,6 +3,7 @@ import base64
 from io import BytesIO
 from google.cloud import storage
 from pdf2image import convert_from_bytes, convert_from_path
+from output_types import BillItems, ItemSuggestions, BItem
 
 def encode_image(file_path):
     ext = os.path.splitext(file_path)[-1].lower()
@@ -97,3 +98,15 @@ def descargar_pdf_gcs(bucket_name, blob_name):
             "base64": base64_image,
             "mime_type": "image/png"
         }
+    
+def format_db_items(db_items):
+    """Formatea los items de la base de datos para enviarlos al LLM"""
+    formatted_items = []
+    for item in db_items:
+        formatted_items.append(BItem(
+            name=item["name"],
+            measureUnit=item["unit"],
+            quantity=item["stock"],
+            unitPrice=item["unitPrice"]
+        ))
+    return formatted_items

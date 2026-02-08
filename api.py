@@ -1,8 +1,9 @@
 import asyncio
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from helpers import format_db_items
 from img_workflow import chain
-from output_types import State, BillItems, ItemSuggestions, ContentBlock
+from output_types import ItemSuggestions, ContentBlock
 
 app = FastAPI(title="BetterTextract API", version="1.0.0")
 
@@ -10,7 +11,7 @@ app = FastAPI(title="BetterTextract API", version="1.0.0")
 class FacturaRequest(BaseModel):
     """Modelo para la solicitud del endpoint"""
     content_block: ContentBlock
-    db_items: list
+    db_items: list[dict]
 
 
 class FacturaResponse(BaseModel):
@@ -46,7 +47,7 @@ async def extract_factura(request: FacturaRequest):
                     "message": "failure", 
                     "bitems": []
                 },
-                "dbItems": request.db_items,
+                "dbItems": format_db_items(request.db_items),
                 "itemPairs": ItemSuggestions(found=False, suggestions={})
                 })
         )

@@ -5,7 +5,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from output_types import BillItems, State, ItemSuggestions
 from langgraph.graph import StateGraph, START, END
-from helpers import handle_file_for_llm, get_db_items
+from helpers import handle_file_for_llm
 
 load_dotenv()
 
@@ -120,7 +120,6 @@ def compare_items(state: State):
     
     if state["billItems"].message == "failure":
         return {"itemPairs": ItemSuggestions(found=False, suggestions={})}
-    db_items: BillItems = get_db_items()
 
     msg_for_llm = [
         SystemMessage(
@@ -131,7 +130,7 @@ def compare_items(state: State):
         HumanMessage(
             content=(
                 f"Compara los siguientes items extraidos de una factura de compra: *{state['billItems']}* "
-                f"con los siguientes items en la base de datos: *{db_items}*. Devuelve una lista "
+                f"con los siguientes items en la base de datos: *{state['dbItems']}*. Devuelve una lista "
                 "con los nombres de los items en la base de datos que tengan el mismo significado "
                 "semántico que los items extraidos de la factura. Si no encuentras items similares, devuelve una lista vacia y un False"
             )
@@ -150,12 +149,3 @@ workflow.add_edge("extract_items", "compare_items")
 workflow.add_edge("compare_items", END)
 
 chain = workflow.compile()
-
-# state = chain.invoke({
-#     "billItems": {
-#         "message": "failure", 
-#         "bitems": []
-#         },
-#     "dbItems": list[str],
-#     "itemPairs": ItemSuggestions
-#     })
