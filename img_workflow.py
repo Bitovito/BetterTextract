@@ -20,10 +20,12 @@ comparison_llm = llm.with_structured_output(ItemSuggestions)
 
 def extract_items(state: State):
     """Primer paso; extraer datos de insumos comprados."""
+    print("---- Extracción de items ----")
     # factura_actual = handle_file_for_llm("./facturas/factura2.pdf")
     ejemplo1 = handle_file_for_llm("./facturas/factura_1.pdf")
     ejemplo2 = handle_file_for_llm("./facturas/factura_2.pdf")
     # ejemplo4 = handle_file_for_llm("./facturas/factura_4.pdf")
+    print(state["factura"])
     
     msg_for_llm = [
         # 1. CONTEXTO E INSTRUCCIONES

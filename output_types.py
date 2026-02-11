@@ -3,8 +3,14 @@ from typing_extensions import TypedDict
 from typing import Dict, Literal, Optional
 from enum import Enum
 
-MUnit = Literal["kg", "g", "l", "ml", "u"]
+MUnit = Literal["kg", "g", "l", "ml", "un"]
 Status = Literal["success", "failure"]
+
+class ContentBlock(BaseModel):
+    """Representa un bloque de contenido con datos codificados en base64"""
+    type: str = Field(default="image", description="Type of content block (e.g., 'image', 'pdf')")
+    base64: str = Field(..., description="Base64 encoded content")
+    mime_type: str = Field(default="image/png", description="MIME type of the content")
 
 class BItem(BaseModel):
     name: str = Field(..., description="Name of the item in the bill.")
@@ -21,12 +27,7 @@ class ItemSuggestions(BaseModel):
     suggestions: Optional[Dict[str, BItem]] = Field(default={}, description="Dictionary mapping item names from the bill to suggested items from the database.")
 
 class State(TypedDict):
-    factura: ContentBlock
+    factura: dict
     billItems: BillItems
     dbItems: list
     itemPairs: ItemSuggestions
-
-class ContentBlock(TypedDict):
-    type: str
-    base64: str
-    myme_tipe: str

@@ -34,7 +34,7 @@ async def extract_factura(request: FacturaRequest):
     """
     try:
         # Validar que el content_block no esté vacío
-        if not request.content_block or not request.content_block.base64.strip():
+        if not request.content_block.base64 or not request.content_block.base64.strip():
             raise ValueError("El content block no puede estar vacío")
         
         # Ejecutar el workflow en un thread pool para no bloquear
@@ -42,7 +42,7 @@ async def extract_factura(request: FacturaRequest):
         state = await loop.run_in_executor(
             None,
             lambda: chain.invoke({
-                "factura": request.content_block,
+                "factura": request.content_block.model_dump(),
                 "billItems": {
                     "message": "failure", 
                     "bitems": []
@@ -71,6 +71,8 @@ async def extract_factura(request: FacturaRequest):
         )
     
     except Exception as e:
+        import traceback
+        traceback.print_exc()  # Imprime el traceback completo
         raise HTTPException(
             status_code=500,
             detail=f"Error al procesar la factura: {str(e)}"
